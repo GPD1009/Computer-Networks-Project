@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# campus-twin — launch the Campus SDN Digital Twin (controller + Mininet campus + CLI).
+#
+# Usage, in the same style as `mn`:
+#     sudo campus-twin                       # bring it all up, drop into the CLI
+#     sudo campus-twin --services            # also start the campus servers
+#     sudo campus-twin --scenario normal     # start with a traffic scenario running
+#     sudo campus-twin --test                # self-test and exit
+#     sudo campus-twin --controller remote   # use a controller you started yourself
+#     sudo campus-twin --help                # all options
+#
+# Dashboard + REST once running: http://localhost:8080
+set -e
+
+# resolve this script's real location even when invoked through a PATH symlink
+SRC="${BASH_SOURCE[0]}"
+while [ -h "$SRC" ]; do
+  DIR="$(cd -P "$(dirname "$SRC")" && pwd)"
+  SRC="$(readlink "$SRC")"; [[ "$SRC" != /* ]] && SRC="$DIR/$SRC"
+done
+BIN="$(cd -P "$(dirname "$SRC")" && pwd)"
+ROOT="$(cd "$BIN/.." && pwd)"
+
+# Mininet needs root — re-exec under sudo, preserving SDN_VENV
+if [ "$(id -u)" -ne 0 ]; then
+  exec sudo SDN_VENV="${SDN_VENV:-/opt/sdn-venv}" "$SRC" "$@"
+fi
+
+exec python3 "$ROOT/emulation/run_campus.py" "$@"

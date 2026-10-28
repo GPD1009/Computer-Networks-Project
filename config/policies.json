@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "description": "Zero-Trust campus policy. Default deny; access is granted per identity (device role / slice), never per port or location.",
+  "default_action": "deny",
+
+  "groups": {
+    "campus_users": ["faculty", "admin", "lab", "student", "research"],
+    "staff":        ["faculty", "admin", "research"]
+  },
+
+  "rules": [
+    { "id": "R01", "name": "DNS for every registered device", "src": ["*"],                         "dst": ["dns"],        "proto": "udp",  "dst_ports": [53],   "qos": "best_effort" },
+    { "id": "R02", "name": "Campus web portal",               "src": ["@campus_users", "smartboard"], "dst": ["web"],      "proto": "tcp",  "dst_ports": [80],   "qos": "best_effort" },
+    { "id": "R03", "name": "Learning Management System",      "src": ["@campus_users", "smartboard"], "dst": ["lms"],      "proto": "tcp",  "dst_ports": [80],   "qos": "best_effort" },
+    { "id": "R04", "name": "Online examination (priority)",   "src": ["lab", "faculty"],            "dst": ["exam"],       "proto": "tcp",  "dst_ports": [80],   "qos": "critical" },
+    { "id": "R05", "name": "Student Internet (BYOD slice)",   "src": ["student"],                   "dst": ["internet"],   "proto": "any",                      "qos": "byod" },
+    { "id": "R06", "name": "Staff & lab Internet",            "src": ["@staff", "lab"],             "dst": ["internet"],   "proto": "any",                      "qos": "best_effort" },
+    { "id": "R07", "name": "Research data backups",           "src": ["@staff"],                    "dst": ["storage"],    "proto": "tcp",  "dst_ports": [5001], "qos": "bulk" },
+    { "id": "R08", "name": "VoIP signalling (SIP)",           "src": ["voip"],                      "dst": ["pbx"],        "proto": "udp",  "dst_ports": [5060], "qos": "realtime" },
+    { "id": "R09", "name": "VoIP media (RTP)",                "src": ["voip"],                      "dst": ["voip"],       "proto": "udp",  "dst_ports": [5004], "qos": "realtime" },
+    { "id": "R10", "name": "Video conferencing",              "src": ["@staff", "lab"],             "dst": ["@staff"],     "proto": "udp",  "dst_ports": [3478], "qos": "realtime" },
+    { "id": "R11", "name": "CCTV streams to NVR",             "src": ["cctv"],                      "dst": ["nvr"],        "proto": "udp",  "dst_ports": [554],  "qos": "video" },
+    { "id": "R12", "name": "IoT telemetry to hub",            "src": ["iot"],                       "dst": ["iothub"],     "proto": "udp",  "dst_ports": [1883], "qos": "best_effort" },
+    { "id": "R13", "name": "Wireless casting to smart board", "src": ["faculty"],                   "dst": ["smartboard"], "proto": "udp",  "dst_ports": [5004], "qos": "realtime" },
+    { "id": "R14", "name": "Printing",                        "src": ["faculty", "admin"],          "dst": ["printer"],    "proto": "tcp",  "dst_ports": [9100], "qos": "best_effort" },
+    { "id": "R15", "name": "NOC diagnostics (admin ping)",    "src": ["admin"],                     "dst": ["*"],          "proto": "icmp",                     "qos": "best_effort" },
+    { "id": "R16", "name": "Ping shared servers",             "src": ["@campus_users", "voip"],     "dst": ["web", "lms", "dns", "internet", "pbx"], "proto": "icmp", "qos": "best_effort" },
+    { "id": "R17", "name": "Intra-slice ping (trusted slices)","src": ["*"],                        "dst": ["*"],          "proto": "icmp", "same_slice": ["ACADEMIC", "ADMIN", "RESEARCH", "VOICE"], "qos": "best_effort" }
+  ],
+
+  "qos_classes": {
+    "realtime":    { "label": "Real-time (VoIP / video-conf)", "queue": 1, "dscp": 46, "routing": "latency" },
+    "critical":    { "label": "Mission critical (exams)",      "queue": 1, "dscp": 34, "routing": "latency" },
+    "video":       { "label": "Surveillance video",            "queue": 0, "dscp": 32, "routing": "load" },
+    "best_effort": { "label": "Best effort",                   "queue": 0, "dscp": 0,  "routing": "default" },
+    "bulk":        { "label": "Bulk / backups",                "queue": 2, "dscp": 8,  "routing": "load" },
+    "byod":        { "label": "BYOD (metered)",                "queue": 2, "dscp": 0,  "routing": "load", "meter": true }
+  },
+
+  "intents": [
+    { "id": "I1", "name": "IoT isolation",            "type": "isolation",    "src": ["iot"],        "allowed_dst": ["iothub", "dns"] },
+    { "id": "I2", "name": "Surveillance isolation",   "type": "isolation",    "src": ["cctv"],       "allowed_dst": ["nvr", "dns"] },
+    { "id": "I3", "name": "Exam server integrity",    "type": "exclusive",    "dst": ["exam"],       "allowed_src": ["lab", "faculty", "admin"] },
+    { "id": "I4", "name": "Admin PCs shielded from untrusted devices", "type": "exclusive", "dst": ["admin"], "allowed_src": ["@staff", "lab"] },
+    { "id": "I5", "name": "VoIP phones reach PBX",    "type": "reachability", "src": ["voip"],       "dst": ["pbx"], "proto": "udp", "port": 5060 },
+    { "id": "I6", "name": "Students reach the LMS",   "type": "reachability", "src": ["student"],    "dst": ["lms"], "proto": "tcp", "port": 80 },
+    { "id": "I7", "name": "Real-time latency bound",  "type": "latency",      "qos": "realtime",     "max_ms": 25 },
+    { "id": "I8", "name": "Link capacity headroom",   "type": "capacity",     "max_util": 0.9 },
+    { "id": "I9", "name": "Dual-homed blocks",        "type": "redundancy",   "min_paths": 2 }
+  ],
+
+  "security": {
+    "auto_quarantine": true,
+    "window_s": 10,
+    "portscan_distinct_ports": 25,
+    "icmp_sweep_hosts": 30,
+    "packet_in_rate_limit": 120,
+    "denied_attempts_limit": 40,
+    "profile_rate_factor": 3.0,
+    "zscore_threshold": 4.0,
+    "block_unregistered_devices": true
+  },
+
+  "traffic_engineering": {
+    "default_routing": "latency",
+    "reroute_util_threshold": 0.75,
+    "te_interval_s": 5,
+    "byod_meter_kbps": { "relaxed": 20000, "normal": 10000, "congested": 4000 }
+  }
+}

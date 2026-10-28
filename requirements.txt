@@ -1,0 +1,13 @@
+# Controller virtual-env (Python 3, inside WSL). Install with:
+#   python3 -m venv /opt/sdn-venv && /opt/sdn-venv/bin/pip install -r requirements.txt
+#
+# os-ken 4.x dropped the runnable manager/WSGI; 3.1.1 is the last that ships
+# os_ken.cmd.manager, which this project launches the controller with.
+os-ken==3.1.1
+networkx>=3.0
+pytest>=7.0
+# eventlet / webob / routes are pulled in by os-ken.
+#
+# The Mininet emulation uses the SYSTEM python3 and the apt packages:
+#   sudo apt-get install mininet openvswitch-switch openvswitch-testcontroller \
+#        iperf iperf3 net-tools tcpdump curl

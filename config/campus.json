@@ -1,0 +1,140 @@
+{
+  "campus": "Amrita Campus - SDN Digital Twin",
+  "controller": { "ip": "127.0.0.1", "port": 6653, "rest_port": 8080 },
+  "emulator_api_port": 8081,
+
+  "blocks": {
+    "CORE": { "name": "Campus Core",        "purpose": "Redundant core layer (two core switches)" },
+    "DC":   { "name": "Data Centre",        "purpose": "Campus servers, NVR, PBX, Internet edge" },
+    "AB1":  { "name": "Academic Block 1",   "purpose": "Administration & Faculty offices" },
+    "AB2":  { "name": "Academic Block 2",   "purpose": "Computer Science laboratories" },
+    "AB3":  { "name": "Academic Block 3",   "purpose": "Smart classrooms & Library" },
+    "AB4":  { "name": "Academic Block 4",   "purpose": "Research & Innovation centre" }
+  },
+
+  "slices": {
+    "ACADEMIC":     { "label": "Academic",      "color": "#2a7de1", "description": "Faculty and lab PCs" },
+    "ADMIN":        { "label": "Administration","color": "#7b4fd6", "description": "Office/finance systems" },
+    "STUDENT":      { "label": "Student / BYOD","color": "#e08a00", "description": "Student laptops, kiosks (rate-limited)" },
+    "RESEARCH":     { "label": "Research",      "color": "#00a3a3", "description": "Research workstations" },
+    "VOICE":        { "label": "Voice",         "color": "#d6457b", "description": "VoIP phones and PBX" },
+    "SURVEILLANCE": { "label": "Surveillance",  "color": "#6b7280", "description": "CCTV cameras and NVR" },
+    "IOT":          { "label": "IoT",           "color": "#3d9a3d", "description": "Sensors and IoT hub" },
+    "SMARTCLASS":   { "label": "Smart Class",   "color": "#b3561e", "description": "Smart boards / classroom AV" },
+    "SERVICES":     { "label": "Shared Services","color":"#8a8f2e", "description": "Printers" },
+    "DATACENTER":   { "label": "Data Centre",   "color": "#334155", "description": "Campus servers" }
+  },
+
+  "device_types": {
+    "fac": { "label": "Faculty PC",           "role": "faculty",    "slice": "ACADEMIC",     "icon": "pc",      "max_mbps": 60 },
+    "adm": { "label": "Admin PC",             "role": "admin",      "slice": "ADMIN",        "icon": "pc",      "max_mbps": 60 },
+    "lab": { "label": "Lab PC",               "role": "lab",        "slice": "ACADEMIC",     "icon": "pc",      "max_mbps": 60 },
+    "kio": { "label": "Library Kiosk",        "role": "student",    "slice": "STUDENT",      "icon": "pc",      "max_mbps": 30 },
+    "lap": { "label": "Student Laptop (BYOD)","role": "student",    "slice": "STUDENT",      "icon": "laptop",  "max_mbps": 30 },
+    "rws": { "label": "Research Workstation", "role": "research",   "slice": "RESEARCH",     "icon": "server",  "max_mbps": 90 },
+    "phn": { "label": "VoIP Phone",           "role": "voip",       "slice": "VOICE",        "icon": "phone",   "max_mbps": 1 },
+    "cam": { "label": "CCTV Camera",          "role": "cctv",       "slice": "SURVEILLANCE", "icon": "camera",  "max_mbps": 6 },
+    "iot": { "label": "IoT Sensor",           "role": "iot",        "slice": "IOT",          "icon": "sensor",  "max_mbps": 0.5 },
+    "brd": { "label": "Smart Board",          "role": "smartboard", "slice": "SMARTCLASS",   "icon": "board",   "max_mbps": 15 },
+    "prn": { "label": "Network Printer",      "role": "printer",    "slice": "SERVICES",     "icon": "printer", "max_mbps": 10 },
+    "srv": { "label": "Server",               "role": "server",     "slice": "DATACENTER",   "icon": "server",  "max_mbps": 100 }
+  },
+
+  "switches": [
+    { "name": "core1", "dpid": 1,   "tier": "core",         "block": "CORE", "label": "Core-1 (low-latency fibre)" },
+    { "name": "core2", "dpid": 2,   "tier": "core",         "block": "CORE", "label": "Core-2 (backup path)" },
+    { "name": "dc1",   "dpid": 16,  "tier": "distribution", "block": "DC",   "label": "Data-centre switch" },
+    { "name": "ab1d",  "dpid": 256, "tier": "distribution", "block": "AB1",  "label": "AB1 distribution" },
+    { "name": "ab1f1", "dpid": 257, "tier": "access",       "block": "AB1",  "floor": 1, "label": "AB1 floor-1 access" },
+    { "name": "ab1f2", "dpid": 258, "tier": "access",       "block": "AB1",  "floor": 2, "label": "AB1 floor-2 access" },
+    { "name": "ab2d",  "dpid": 512, "tier": "distribution", "block": "AB2",  "label": "AB2 distribution" },
+    { "name": "ab2f1", "dpid": 513, "tier": "access",       "block": "AB2",  "floor": 1, "label": "AB2 floor-1 access" },
+    { "name": "ab2f2", "dpid": 514, "tier": "access",       "block": "AB2",  "floor": 2, "label": "AB2 floor-2 access" },
+    { "name": "ab3d",  "dpid": 768, "tier": "distribution", "block": "AB3",  "label": "AB3 distribution" },
+    { "name": "ab3f1", "dpid": 769, "tier": "access",       "block": "AB3",  "floor": 1, "label": "AB3 floor-1 access" },
+    { "name": "ab3f2", "dpid": 770, "tier": "access",       "block": "AB3",  "floor": 2, "label": "AB3 floor-2 access" },
+    { "name": "ab4d",  "dpid": 1024,"tier": "distribution", "block": "AB4",  "label": "AB4 distribution" },
+    { "name": "ab4f1", "dpid": 1025,"tier": "access",       "block": "AB4",  "floor": 1, "label": "AB4 floor-1 access" },
+    { "name": "ab4f2", "dpid": 1026,"tier": "access",       "block": "AB4",  "floor": 2, "label": "AB4 floor-2 access" }
+  ],
+
+  "links": [
+    { "a": "core1", "b": "core2", "bw": 100, "delay_ms": 1 },
+    { "a": "core1", "b": "dc1",   "bw": 100, "delay_ms": 1 },
+    { "a": "core2", "b": "dc1",   "bw": 100, "delay_ms": 1 },
+
+    { "a": "core1", "b": "ab1d",  "bw": 40,  "delay_ms": 2 },
+    { "a": "core2", "b": "ab1d",  "bw": 40,  "delay_ms": 6 },
+    { "a": "core1", "b": "ab2d",  "bw": 40,  "delay_ms": 2 },
+    { "a": "core2", "b": "ab2d",  "bw": 40,  "delay_ms": 6 },
+    { "a": "core1", "b": "ab3d",  "bw": 40,  "delay_ms": 2 },
+    { "a": "core2", "b": "ab3d",  "bw": 40,  "delay_ms": 6 },
+    { "a": "core1", "b": "ab4d",  "bw": 40,  "delay_ms": 2 },
+    { "a": "core2", "b": "ab4d",  "bw": 40,  "delay_ms": 6 },
+
+    { "a": "ab1d",  "b": "ab2d",  "bw": 20,  "delay_ms": 3 },
+    { "a": "ab3d",  "b": "ab4d",  "bw": 20,  "delay_ms": 3 },
+
+    { "a": "ab1d",  "b": "ab1f1", "bw": 100, "delay_ms": 1 },
+    { "a": "ab1d",  "b": "ab1f2", "bw": 100, "delay_ms": 1 },
+    { "a": "ab2d",  "b": "ab2f1", "bw": 100, "delay_ms": 1 },
+    { "a": "ab2d",  "b": "ab2f2", "bw": 100, "delay_ms": 1 },
+    { "a": "ab3d",  "b": "ab3f1", "bw": 100, "delay_ms": 1 },
+    { "a": "ab3d",  "b": "ab3f2", "bw": 100, "delay_ms": 1 },
+    { "a": "ab4d",  "b": "ab4f1", "bw": 100, "delay_ms": 1 },
+    { "a": "ab4d",  "b": "ab4f2", "bw": 100, "delay_ms": 1 }
+  ],
+
+  "host_link": { "bw": 100, "delay_ms": 0.5 },
+
+  "hosts": [
+    { "name": "ab1-fac1", "type": "fac", "switch": "ab1f1", "ip": "10.1.1.11" },
+    { "name": "ab1-fac2", "type": "fac", "switch": "ab1f1", "ip": "10.1.1.12" },
+    { "name": "ab1-adm1", "type": "adm", "switch": "ab1f1", "ip": "10.1.1.21" },
+    { "name": "ab1-phn1", "type": "phn", "switch": "ab1f1", "ip": "10.1.1.51" },
+    { "name": "ab1-prn1", "type": "prn", "switch": "ab1f1", "ip": "10.1.1.71" },
+    { "name": "ab1-fac3", "type": "fac", "switch": "ab1f2", "ip": "10.1.2.11" },
+    { "name": "ab1-phn2", "type": "phn", "switch": "ab1f2", "ip": "10.1.2.51" },
+    { "name": "ab1-cam1", "type": "cam", "switch": "ab1f2", "ip": "10.1.2.41" },
+    { "name": "ab1-iot1", "type": "iot", "switch": "ab1f2", "ip": "10.1.2.31" },
+
+    { "name": "ab2-lab1", "type": "lab", "switch": "ab2f1", "ip": "10.2.1.11" },
+    { "name": "ab2-lab2", "type": "lab", "switch": "ab2f1", "ip": "10.2.1.12" },
+    { "name": "ab2-lab3", "type": "lab", "switch": "ab2f1", "ip": "10.2.1.13" },
+    { "name": "ab2-brd1", "type": "brd", "switch": "ab2f1", "ip": "10.2.1.61" },
+    { "name": "ab2-lab4", "type": "lab", "switch": "ab2f2", "ip": "10.2.2.11" },
+    { "name": "ab2-lab5", "type": "lab", "switch": "ab2f2", "ip": "10.2.2.12" },
+    { "name": "ab2-cam1", "type": "cam", "switch": "ab2f2", "ip": "10.2.2.41" },
+    { "name": "ab2-iot1", "type": "iot", "switch": "ab2f2", "ip": "10.2.2.31" },
+    { "name": "ab2-phn1", "type": "phn", "switch": "ab2f2", "ip": "10.2.2.51" },
+
+    { "name": "ab3-brd1", "type": "brd", "switch": "ab3f1", "ip": "10.3.1.61" },
+    { "name": "ab3-lap1", "type": "lap", "switch": "ab3f1", "ip": "10.3.1.81" },
+    { "name": "ab3-lap2", "type": "lap", "switch": "ab3f1", "ip": "10.3.1.82" },
+    { "name": "ab3-iot1", "type": "iot", "switch": "ab3f1", "ip": "10.3.1.31" },
+    { "name": "ab3-brd2", "type": "brd", "switch": "ab3f2", "ip": "10.3.2.61" },
+    { "name": "ab3-lap3", "type": "lap", "switch": "ab3f2", "ip": "10.3.2.81" },
+    { "name": "ab3-kio1", "type": "kio", "switch": "ab3f2", "ip": "10.3.2.11" },
+    { "name": "ab3-cam1", "type": "cam", "switch": "ab3f2", "ip": "10.3.2.41" },
+    { "name": "ab3-iot2", "type": "iot", "switch": "ab3f2", "ip": "10.3.2.32" },
+
+    { "name": "ab4-rws1", "type": "rws", "switch": "ab4f1", "ip": "10.4.1.11" },
+    { "name": "ab4-rws2", "type": "rws", "switch": "ab4f1", "ip": "10.4.1.12" },
+    { "name": "ab4-phn1", "type": "phn", "switch": "ab4f1", "ip": "10.4.1.51" },
+    { "name": "ab4-iot1", "type": "iot", "switch": "ab4f1", "ip": "10.4.1.31" },
+    { "name": "ab4-lap1", "type": "lap", "switch": "ab4f2", "ip": "10.4.2.81" },
+    { "name": "ab4-lap2", "type": "lap", "switch": "ab4f2", "ip": "10.4.2.82" },
+    { "name": "ab4-cam1", "type": "cam", "switch": "ab4f2", "ip": "10.4.2.41" },
+    { "name": "ab4-fac1", "type": "fac", "switch": "ab4f2", "ip": "10.4.2.13" },
+
+    { "name": "dc-web",   "type": "srv", "switch": "dc1", "ip": "10.10.1.10", "role": "web",      "label": "Campus Web Portal" },
+    { "name": "dc-lms",   "type": "srv", "switch": "dc1", "ip": "10.10.1.11", "role": "lms",      "label": "Learning Mgmt System" },
+    { "name": "dc-exam",  "type": "srv", "switch": "dc1", "ip": "10.10.1.12", "role": "exam",     "label": "Online Exam Server" },
+    { "name": "dc-nvr",   "type": "srv", "switch": "dc1", "ip": "10.10.1.13", "role": "nvr",      "label": "CCTV Video Recorder", "slice": "SURVEILLANCE" },
+    { "name": "dc-iot",   "type": "srv", "switch": "dc1", "ip": "10.10.1.14", "role": "iothub",   "label": "IoT Hub / MQTT",      "slice": "IOT" },
+    { "name": "dc-pbx",   "type": "srv", "switch": "dc1", "ip": "10.10.1.15", "role": "pbx",      "label": "VoIP PBX",            "slice": "VOICE" },
+    { "name": "dc-dns",   "type": "srv", "switch": "dc1", "ip": "10.10.1.16", "role": "dns",      "label": "DNS Server" },
+    { "name": "dc-store", "type": "srv", "switch": "dc1", "ip": "10.10.1.17", "role": "storage",  "label": "Backup Storage" },
+    { "name": "dc-inet",  "type": "srv", "switch": "dc1", "ip": "10.10.1.254","role": "internet", "label": "Internet Gateway" }
+  ]
+}

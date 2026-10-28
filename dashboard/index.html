@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus SDN Digital Twin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Campus <span>SDN</span> Digital Twin</h1>
+  <span class="pill" id="p-ctl">controller…</span>
+  <span class="pill" id="p-sync">twin…</span>
+  <span class="pill" id="p-route">routing…</span>
+  <span class="pill" id="p-sec">security…</span>
+  <span class="grow"></span>
+  <span id="clock"></span>
+  <button class="btn ghost sm" id="btn-pause">⏸ pause</button>
+</header>
+
+<nav id="tabs">
+  <button data-v="overview" class="active">Overview</button>
+  <button data-v="topology">Topology</button>
+  <button data-v="flows">Flows &amp; QoS</button>
+  <button data-v="policy">Zero-Trust Policy</button>
+  <button data-v="twin">Digital Twin</button>
+  <button data-v="security">Security</button>
+  <button data-v="ai">AI Routing</button>
+  <button data-v="emulation">Emulation</button>
+</nav>
+
+<main>
+  <!-- OVERVIEW -->
+  <section class="view active" id="overview">
+    <div class="grid g4" id="tiles"></div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h2>Three-tier SDN architecture <small>application → control → infrastructure</small></h2>
+        <div id="arch"></div>
+      </div>
+      <div class="card">
+        <h2>Live alerts</h2>
+        <div class="feed" id="ov-alerts"></div>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><h2>Busiest links</h2><div id="ov-links"></div></div>
+      <div class="card"><h2>Recent control-plane events</h2><div class="feed" id="ov-events"></div></div>
+    </div>
+  </section>
+
+  <!-- TOPOLOGY -->
+  <section class="view" id="topology">
+    <div class="card">
+      <h2>Campus fabric <small>4 academic blocks + redundant core + data centre — colour = live link utilisation</small></h2>
+      <svg id="topo" viewBox="0 0 1180 560" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="legend" id="topo-legend"></div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><h2 id="sel-title">Click a switch or host</h2><div id="sel-body" class="tip">
+        Select a node in the map to inspect it.</div></div>
+      <div class="card"><h2>Links</h2><div class="scroll" id="link-table"></div></div>
+    </div>
+  </section>
+
+  <!-- FLOWS -->
+  <section class="view" id="flows">
+    <div class="grid g4" id="qos-tiles"></div>
+    <div class="card" style="margin-top:14px">
+      <h2>Active micro-flows <small>installed by the controller per (src,dst,proto,port) — identity-aware</small></h2>
+      <div class="scroll" id="flow-table"></div>
+    </div>
+  </section>
+
+  <!-- POLICY -->
+  <section class="view" id="policy">
+    <div class="grid g2">
+      <div class="card">
+        <h2>Zero-Trust check <small>identity-based, location-independent</small></h2>
+        <div class="row">
+          <select id="pc-src"></select><span>→</span><select id="pc-dst"></select>
+          <select id="pc-proto"><option>tcp</option><option>udp</option><option>icmp</option></select>
+          <input type="number" id="pc-port" placeholder="port" style="width:80px" value="80">
+          <button class="btn" id="pc-go">Check</button>
+        </div>
+        <pre class="out" id="pc-out">Pick a source identity, a destination and a service.</pre>
+      </div>
+      <div class="card">
+        <h2>Policy rules <small id="pol-ver"></small></h2>
+        <div class="scroll" id="rule-table"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>Role × role reachability matrix <small>what each device identity may reach (green = allowed service)</small></h2>
+      <div class="scroll" id="matrix"></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>Policy editor <small>validate against the twin before deploying to the live network</small></h2>
+      <div class="row" style="margin-bottom:8px">
+        <button class="btn ghost sm" id="pe-load">Load current</button>
+        <button class="btn ghost sm" id="pe-validate">Validate on twin</button>
+        <button class="btn sm" id="pe-apply">Deploy to network</button>
+        <button class="btn ghost sm" id="pe-rollback">Rollback</button>
+        <span class="tip">A change that breaks an intent is blocked unless forced.</span>
+      </div>
+      <div class="grid g2">
+        <textarea id="pe-text" spellcheck="false"></textarea>
+        <pre class="out" id="pe-out" style="max-height:320px">Validation output appears here.</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- TWIN -->
+  <section class="view" id="twin">
+    <div class="grid g2">
+      <div class="card">
+        <h2>What-if: link / maintenance failure <small>simulate before you touch the live network</small></h2>
+        <div class="row"><select id="wf-links" multiple size="6" style="min-width:220px"></select>
+          <div><button class="btn" id="wf-go">Simulate failure</button>
+            <div class="tip" style="margin-top:6px">Ctrl-click to fail several links at once.</div></div></div>
+        <pre class="out" id="wf-out">Select one or more links and simulate.</pre>
+      </div>
+      <div class="card">
+        <h2>What-if: added traffic load <small>predict congestion &amp; delay</small></h2>
+        <div class="row">
+          <select id="wt-src"></select><span>→</span><select id="wt-dst"></select>
+          <input type="number" id="wt-mbps" value="80" style="width:80px"><span class="tip">Mbps</span>
+          <select id="wt-qos"></select>
+          <button class="btn" id="wt-go">Predict</button>
+        </div>
+        <pre class="out" id="wt-out">Add a demand (host, block, or role:&lt;role&gt;) and predict.</pre>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><h2>Intent compliance <small>continuous verification</small></h2><div id="intents"></div></div>
+      <div class="card">
+        <h2>Routing strategy comparison <small>twin predicts KPIs per algorithm</small></h2>
+        <div class="row"><label>stress ×</label><input type="number" id="cmp-stress" value="2" style="width:70px" step="0.5">
+          <button class="btn sm" id="cmp-go">Compare</button></div>
+        <div id="cmp-out" style="margin-top:10px"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>Predictive maintenance &amp; congestion forecast <small>Holt trend on link utilisation</small></h2>
+      <div class="scroll" id="forecast"></div>
+    </div>
+  </section>
+
+  <!-- SECURITY -->
+  <section class="view" id="security">
+    <div class="grid g3" id="sec-tiles"></div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h2>Quarantined devices <small>isolated fabric-wide by the controller</small></h2>
+        <div id="quar"></div>
+        <div class="sep"></div>
+        <div class="row"><select id="q-host"></select>
+          <input type="text" id="q-reason" placeholder="reason" style="flex:1">
+          <button class="btn danger sm" id="q-go">Quarantine</button></div>
+      </div>
+      <div class="card"><h2>Unregistered devices <small>blocked by zero-trust admission</small></h2><div id="rogue"></div></div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card"><h2>Denied connection attempts</h2><div class="scroll" id="denied"></div></div>
+      <div class="card"><h2>Anomaly detector <small>IDS counters &amp; device baselines</small></h2><div id="ids"></div></div>
+    </div>
+  </section>
+
+  <!-- AI -->
+  <section class="view" id="ai">
+    <div class="card">
+      <h2>Routing engine <small>pick the strategy the controller programs into the fabric</small></h2>
+      <div class="row" id="route-modes"></div>
+      <p class="tip" id="route-desc"></p>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h2>Multi-agent Q-routing <small>Boyan &amp; Littman — one learning agent per switch</small></h2>
+        <div id="ql-stats" class="kpi"></div>
+        <div class="sep"></div>
+        <div class="row"><label>agent</label><select id="ql-node"></select></div>
+        <div class="scroll" id="ql-table" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <h2>Learned vs classic routing <small>latency reduction (the PPT's efficiency claim)</small></h2>
+        <div id="ql-bench"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EMULATION -->
+  <section class="view" id="emulation">
+    <div class="card">
+      <h2>Drive the Mininet emulation <small>needs the emulation control bridge (:8081)</small></h2>
+      <div class="row">
+        <button class="btn" data-sc="normal">Normal campus day</button>
+        <button class="btn" data-sc="congestion">Congestion (AB4 backups)</button>
+        <button class="btn" data-sc="exam">Online exam</button>
+        <button class="btn" data-sc="byod">BYOD surge</button>
+        <button class="btn ghost" data-sc="stop">Stop traffic</button>
+        <button class="btn ghost" id="emu-services">Start services</button>
+      </div>
+      <div class="sep"></div>
+      <div class="row">
+        <strong>IDS test traffic (your own campus):</strong>
+        <button class="btn ghost sm" data-pr="sweep">host sweep</button>
+        <button class="btn ghost sm" data-pr="denied">policy probing</button>
+        <button class="btn ghost sm" data-pr="overrate">IoT over-rate</button>
+      </div>
+      <div class="sep"></div>
+      <div class="row">
+        <label>Fail link</label><select id="emu-link"></select>
+        <button class="btn danger sm" id="emu-down">Down</button>
+        <button class="btn ghost sm" id="emu-up">Up</button>
+        <span class="tip">Watch the controller reroute in Topology / Flows.</span>
+      </div>
+      <pre class="out" id="emu-out">The emulation bridge lets the dashboard start traffic and fail links.
+If this does nothing, run the emulation (sudo scripts/start_network.sh) on the same host.</pre>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
